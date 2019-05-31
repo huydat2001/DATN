@@ -10,6 +10,7 @@ import { Avatar, Button, Drawer, message, Tooltip } from "antd";
 import { useContext, useState } from "react";
 import { AuthContext } from "../../contexts/auth.context";
 import { useNavigate } from "react-router-dom";
+import { nav } from "motion/react-client";
 const HeaderLayout = (props) => {
   const [openProfile, setOpenProfile] = useState(false);
   const {
@@ -167,23 +168,10 @@ const HeaderLayout = (props) => {
                       fontSize: "14px",
                     }}
                     onClick={() => {
-                      message.info("Chức năng đang phát triển!");
+                      navigate("/");
                     }}
                   >
-                    Cập nhật thông tin
-                  </Button>
-                  <Button
-                    type="default"
-                    className="min-w-full"
-                    style={{
-                      height: "40px",
-                      fontSize: "14px",
-                    }}
-                    onClick={() => {
-                      message.info("Chức năng đang phát triển!");
-                    }}
-                  >
-                    Đổi mật khẩu
+                    Giao diện người dùng
                   </Button>
                 </div>
               </Drawer>

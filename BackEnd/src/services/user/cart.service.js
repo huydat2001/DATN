@@ -16,7 +16,6 @@ module.exports = {
   addToCart: async (userId, productId, quantity, selectedColor) => {
     try {
       let cart = await Cart.findOne({ user: userId });
-
       if (!cart) {
         cart = new Cart({ user: userId, items: [] });
       }
@@ -89,5 +88,16 @@ module.exports = {
     } catch (error) {
       throw new Error("Lỗi khi xóa sản phẩm: " + error.message);
     }
+  },
+  removeAllCart: async (userId) => {
+    try {
+      const cart = await Cart.findOne({ user: userId });
+      if (!cart) {
+        throw new Error("Giỏ hàng không tồn tại");
+      }
+
+      const result = await Cart.deleteMany({ _id: cart._id });
+      return result;
+    } catch (error) {}
   },
 };

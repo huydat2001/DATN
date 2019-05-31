@@ -6,7 +6,6 @@ const getCartAPI = () => {
 };
 
 const addToCartAPI = (cartItem) => {
-  console.log("cartItem :>> ", cartItem);
   const URL_BACKEND = "/v1/api/cart/add";
   return axios.post(URL_BACKEND, cartItem);
 };
@@ -23,5 +22,14 @@ const removeFromCartAPI = async (productId) => {
   const URL_BACKEND = "/v1/api/cart/remove";
   return axios.delete(`${URL_BACKEND}/${productId}`);
 };
-
-export { getCartAPI, addToCartAPI, updateCartAPI, removeFromCartAPI };
+const clearCartAPI = (data) => {
+  const URL_BACKEND = "/v1/api/cart/";
+  return axios.delete(URL_BACKEND, data);
+};
+export {
+  getCartAPI,
+  addToCartAPI,
+  updateCartAPI,
+  removeFromCartAPI,
+  clearCartAPI,
+};

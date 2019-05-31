@@ -1,3 +1,4 @@
+const { number } = require("joi");
 const mongoose = require("mongoose");
 const mongoose_delete = require("mongoose-delete");
 
@@ -18,6 +19,10 @@ const discountSchema = new mongoose.Schema(
       type: Number, // Giá trị giảm (ví dụ: 20 nếu là 20%, hoặc 50000 nếu là 50k)
       required: true,
     },
+    maxDiscountAmount: {
+      type: Number,
+      default: null,
+    },
     startDate: {
       type: Date, // Ngày bắt đầu áp dụng
       default: Date.now,
@@ -28,7 +33,7 @@ const discountSchema = new mongoose.Schema(
     },
     maxUses: {
       type: Number, // Số lần sử dụng tối đa
-      default: Infinity,
+      default: Number.MAX_SAFE_INTEGER,
     },
     usedCount: {
       type: Number, // Số lần đã sử dụng

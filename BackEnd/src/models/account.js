@@ -6,7 +6,6 @@ const accountSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      // required: true,
       unique: true,
       trim: true,
     },
@@ -48,6 +47,10 @@ const accountSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    verificationTokenExpires: {
+      type: Date,
+      default: null,
+    },
     resetPasswordToken: {
       type: String,
       default: null,
@@ -63,6 +66,11 @@ const accountSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "banned"],
       default: "active",
+    },
+    statusE: {
+      type: String,
+      enum: ["online", "busy", "offline"],
+      default: "offline",
     },
   },
   {

@@ -24,10 +24,10 @@ const ProductListComponent = (props) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { filter, badgeText, badgeColor } = props;
+
   useEffect(() => {
     fetchProducts();
   }, [filter]);
-
   const fetchProducts = async () => {
     try {
       const res = await getProductByQuyeryAPI(1, 12, filter);
@@ -64,7 +64,6 @@ const ProductListComponent = (props) => {
                 product.images[1].name
               }`
             : image;
-
         return {
           id: product._id,
           name: product.name,
@@ -76,7 +75,7 @@ const ProductListComponent = (props) => {
           discount,
           decreases: product.decreases,
           rating: product.ratings || 0,
-          reviews: product.reviews?.length || 0,
+          totalReviews: product.totalReviews || 0,
           sold: product.sold || 0,
           color: product.color || [],
           image,
@@ -141,8 +140,6 @@ const ProductListComponent = (props) => {
                           icon={<ShoppingCartOutlined />}
                           onClick={(e) => {
                             e.stopPropagation();
-
-                            console.log("Thêm vào giỏ", product.id);
                             handleAddToCart(product);
                           }}
                         >
@@ -202,12 +199,13 @@ const ProductListComponent = (props) => {
                         </span>
                         <div className="flex items-center">
                           <Rate
+                            allowHalf
                             disabled
                             defaultValue={product.rating}
                             style={{ fontSize: 14 }}
                           />
                           <span className="ml-2 text-gray-500">
-                            ({product.reviews} đánh giá)
+                            ({product.totalReviews} đánh giá)
                           </span>
                         </div>
                         <div className="flex items-center">

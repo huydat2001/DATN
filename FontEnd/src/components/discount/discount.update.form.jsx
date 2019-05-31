@@ -22,21 +22,25 @@ const DiscountUpdateFormComponent = (props) => {
     fetchDiscount,
     setCheck,
     check,
+    checkType,
+    setCheckType,
+    getProduct,
+    optionProduct,
+    setOptionProduct,
   } = props;
 
   useEffect(() => {
     onFill();
     //   getCategory();
   }, [isModalUpdateOpen]);
+  useEffect(() => {
+    getProduct();
+  }, [setOptionProduct]);
   const [discountForm] = Form.useForm();
   const resetAndCloseModal = () => {
     discountForm.resetFields();
     setIsModalUpdateOpen(false);
   };
-  const productOptions = [
-    { value: "67ea06f38dfe9b816d40e5ef", label: "Sản phẩm A" },
-    { value: "67ea06f38dfe9b816d40e5f0", label: "Sản phẩm B" },
-  ];
   const onFill = () => {
     if (dataDetail) {
       discountForm.setFieldsValue({
@@ -52,7 +56,9 @@ const DiscountUpdateFormComponent = (props) => {
         maxUses: dataDetail.maxUses ? dataDetail.maxUses : undefined,
         minOrderValue: dataDetail.minOrderValue,
         isApplicableToAll: dataDetail.isApplicableToAll,
-        applicableProducts: dataDetail.applicableProducts || [],
+        applicableProducts:
+          dataDetail.applicableProducts?.map((pro) => pro._id || pro) || [],
+        maxDiscountAmount: dataDetail.maxDiscountAmount,
       });
       setCheck(dataDetail.isApplicableToAll);
     }
@@ -61,12 +67,14 @@ const DiscountUpdateFormComponent = (props) => {
     const {
       id,
       code,
-      isApplicableToAll, // Sửa thành isApplicableToAll
+      isApplicableToAll,
       maxUses,
       minOrderValue,
       status,
       type,
       value,
+      applicableProducts,
+      maxDiscountAmount,
       dateRange, // Lấy dateRange từ values
     } = values;
     const startDate =
@@ -77,13 +85,15 @@ const DiscountUpdateFormComponent = (props) => {
       id,
       code,
       isApplicableToAll,
-      maxUses: maxUses == null ? "" : maxUses,
+      maxUses,
       minOrderValue,
       status,
       type,
       value,
       startDate,
       endDate,
+      maxDiscountAmount,
+      applicableProducts,
     };
     const res = await updateDiscountAPI(newValues);
     if (res.data) {
@@ -155,7 +165,10 @@ const DiscountUpdateFormComponent = (props) => {
             rules={[{ required: true, message: "Vui lòng chọn loại giảm giá" }]}
             initialValue="percentage"
           >
-            <Select placeholder="Chọn loại giảm giá">
+            <Select
+              placeholder="Chọn loại giảm giá"
+              onChange={(value) => setCheckType(value === "percentage")}
+            >
               <Option value="percentage">Phần trăm</Option>
               <Option value="fixed">Cố định</Option>
             </Select>
@@ -183,7 +196,32 @@ const DiscountUpdateFormComponent = (props) => {
               parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
             />
           </Form.Item>
-
+          {/* Giá trị giảm tôi đa*/}
+          <Form.Item
+            label="Giảm tối đa"
+            name="maxDiscountAmount"
+            rules={[
+              {
+                required: checkType,
+                message: "Giá trị giảm tối đa không được để trống",
+              },
+              {
+                type: "number",
+                min: 0,
+                message: "Giá trị giảm phải lớn hơn hoặc bằng 0",
+              },
+            ]}
+          >
+            <InputNumber
+              disabled={!checkType}
+              style={{ width: "100%" }}
+              placeholder="Nhập giá trị giảm tối đa"
+              formatter={(value) =>
+                `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+              }
+              parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
+            />
+          </Form.Item>
           {/* Thời gian áp dụng */}
           <Form.Item
             label="Thời gian"
@@ -284,7 +322,7 @@ const DiscountUpdateFormComponent = (props) => {
             <Select
               mode="multiple"
               allowClear
-              options={productOptions}
+              options={optionProduct}
               showSearch
               disabled={check}
               filterOption={(input, option) =>
@@ -292,6 +330,8 @@ const DiscountUpdateFormComponent = (props) => {
                   .toLowerCase()
                   .includes(input.toLowerCase())
               }
+              placeholder="Chọn sản phẩm"
+              notFoundContent="Không tìm thấy sản phẩm"
             ></Select>
           </Form.Item>
 

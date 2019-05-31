@@ -1,5 +1,6 @@
+// file: user.product.jsx
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getProductByQuyeryAPI } from "../../services/api.service.product";
 import {
   Button,
@@ -11,25 +12,32 @@ import {
   Carousel,
   Tabs,
 } from "antd";
-import { ShoppingCartOutlined } from "@ant-design/icons";
 import { motion } from "framer-motion";
 import { CiCircleInfo } from "react-icons/ci";
 import { MdOutlinePolicy, MdOutlineRateReview } from "react-icons/md";
 import "../../assets/product.css";
+import { useCart } from "../../contexts/cart.context";
+import CommentComponent from "../../components/comment/comment";
+
 const UserProductPage = () => {
   const { name } = useParams();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [count, setCount] = useState(0);
-  const carouselRef = useRef(null); // Tạo ref cho Carousel
+  const [count, setCount] = useState(1);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const carouselRef = useRef(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
+
   const increment = () => {
-    if (product.stock != 0 && count < product.stock) {
+    if (product.stock !== 0 && count < product.stock) {
       setCount((prevCount) => prevCount + 1);
     }
   };
+
   const decrement = () => {
-    setCount((prevCount) => (prevCount > 0 ? prevCount - 1 : 0));
+    setCount((prevCount) => (prevCount > 1 ? prevCount - 1 : 1));
   };
 
   useEffect(() => {
@@ -50,15 +58,15 @@ const UserProductPage = () => {
         throw new Error("Sản phẩm không tồn tại");
       }
 
-      const price = productData.price.toLocaleString("vi-VN", {
+      const price = productData.price;
+      const formattedPrice = productData.price.toLocaleString("vi-VN", {
         style: "currency",
         currency: "VND",
       });
 
-      const discountedPrice = (
-        productData.price -
-        productData.price * (productData.decreases / 100 || 0)
-      ).toLocaleString("vi-VN", {
+      const discountedPrice =
+        price - (price * (productData.decreases || 0)) / 100;
+      const formattedDiscountedPrice = discountedPrice.toLocaleString("vi-VN", {
         style: "currency",
         currency: "VND",
       });
@@ -74,11 +82,14 @@ const UserProductPage = () => {
       setProduct({
         id: productData._id,
         name: productData.name,
-        price,
-        discountedPrice,
+        price: formattedPrice,
+        rawPrice: price, // Giá gốc để tính toán
+        discountedPrice: formattedDiscountedPrice,
+        rawDiscountedPrice: discountedPrice, // Giá sau giảm để tính toán
         decreases: productData.decreases,
-        rating: productData.ratings || 0,
+        ratings: productData.ratings || 0,
         reviews: productData.reviews?.length || 0,
+        totalReviews: productData.totalReviews || 0,
         sold: productData.sold || 0,
         stock: productData.stock,
         color: productData.color || [],
@@ -90,6 +101,10 @@ const UserProductPage = () => {
         weight: productData.weight || "Chưa có cân nặng",
         material: productData.material || "Chưa có chất liệu",
       });
+
+      if (productData.color?.length > 0) {
+        setSelectedColor(productData.color[0]);
+      }
     } catch (error) {
       console.error("Lỗi lấy chi tiết sản phẩm", error);
       notification.error({
@@ -100,12 +115,81 @@ const UserProductPage = () => {
       setLoading(false);
     }
   };
+
   const handleThumbnailClick = (index) => {
     if (carouselRef.current) {
       setCurrentSlide(index);
-      carouselRef.current.goTo(index); // Chuyển Carousel đến slide tương ứng
+      carouselRef.current.goTo(index);
     }
   };
+
+  const handleAddToCart = async (product) => {
+    if (product.stock === 0) {
+      notification.error({
+        message: "Hết hàng",
+        description: `${product.name} hiện đã hết hàng!`,
+      });
+      return;
+    }
+
+    if (!selectedColor && product.color.length > 0) {
+      notification.error({
+        message: "Chưa chọn màu",
+        description: "Vui lòng chọn màu trước khi thêm vào giỏ hàng!",
+      });
+      return;
+    }
+
+    try {
+      await addToCart(
+        {
+          id: product.id,
+          color: product.color,
+        },
+        count,
+        selectedColor
+      );
+    } catch (error) {
+      notification.error({
+        message: "Lỗi thêm vào giỏ hàng",
+        description: error.message || "Đã có lỗi xảy ra",
+      });
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (product.stock === 0) {
+      notification.error({
+        message: "Hết hàng",
+        description: `${product.name} hiện đã hết hàng!`,
+      });
+      return;
+    }
+
+    if (!selectedColor && product.color.length > 0) {
+      notification.error({
+        message: "Chưa chọn màu",
+        description: "Vui lòng chọn màu trước khi mua ngay!",
+      });
+      return;
+    }
+
+    // Lưu thông tin sản phẩm vào localStorage
+    const buyNowProduct = {
+      id: product.id,
+      name: product.name,
+      rawPrice: product.rawPrice,
+      rawDiscountedPrice: product.rawDiscountedPrice,
+      quantity: count,
+      color: selectedColor,
+      image: product.images[0],
+    };
+    localStorage.setItem("buyNowProduct", JSON.stringify(buyNowProduct));
+
+    // Chuyển hướng đến /checkout/:id
+    navigate(`/checkout/${product.id}`);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -125,9 +209,7 @@ const UserProductPage = () => {
       transition={{ duration: 0.5 }}
       className="container mx-auto py-10 px-4 sm:px-6 lg:px-8"
     >
-      {/* Phần trên cùng: Hình ảnh và thông tin cơ bản */}
       <Row gutter={[32, 32]} className="mb-10">
-        {/* Hình ảnh sản phẩm */}
         <Col xs={24} md={15}>
           <Carousel
             autoplay
@@ -163,26 +245,24 @@ const UserProductPage = () => {
           </div>
         </Col>
 
-        {/* Thông tin sản phẩm */}
         <Col xs={24} md={9}>
           <h1 className="text-3xl font-semibold text-gray-800 mb-4">
             {product.name}
           </h1>
 
-          {/* Đánh giá và số lượng bán */}
           <div className="flex items-center mb-4">
             <Rate
+              allowHalf
               disabled
-              value={product.rating}
-              style={{ fontSize: 16, color: "#fadb14" }}
+              value={product.ratings}
+              style={{ fontSize: 16, colosr: "#fadb14" }}
             />
             <span className="ml-2 text-gray-500">
-              ({product.reviews} đánh giá)
+              ({product.totalReviews} đánh giá)
             </span>
             <span className="ml-4 text-gray-500">Đã bán {product.sold}</span>
           </div>
 
-          {/* Giá sản phẩm */}
           <div className="mb-4 flex items-center space-x-4">
             {product.decreases && product.decreases > 0 ? (
               <>
@@ -203,13 +283,11 @@ const UserProductPage = () => {
             )}
           </div>
 
-          {/* Danh mục */}
           <p className="mb-4 text-gray-700">
             <strong className="text-gray-700 text-lg">Danh mục:</strong>{" "}
             <span className=" text-lg">{product.category}</span>
           </p>
 
-          {/* Màu sắc */}
           <div className="mb-4 flex items-center">
             <strong className="text-gray-700 text-lg mr-2">Màu sắc:</strong>
             {product.color.length > 0 ? (
@@ -229,10 +307,16 @@ const UserProductPage = () => {
                 const tagColor = colorMap[normalizedColor] || normalizedColor;
 
                 return (
-                  <span
+                  <button
                     key={i}
-                    className="inline-block w-5 h-5 rounded-full mr-2 border border-gray-300 cursor-pointer hover:scale-150 transition-transform"
+                    className={`inline-block w-4 h-4 rounded-full mr-2 border cursor-pointer hover:scale-150 transition-transform ${
+                      selectedColor === c
+                        ? "border-blue-500 scale-150"
+                        : "border-gray-300"
+                    }`}
                     style={{ backgroundColor: tagColor }}
+                    onClick={() => setSelectedColor(c)}
+                    title={c}
                   />
                 );
               })
@@ -245,7 +329,7 @@ const UserProductPage = () => {
             <strong className="text-gray-700 text-lg">Tồn kho:</strong>{" "}
             <span className=" text-lg">{product.stock}</span>
           </p>
-          {/* Bộ đếm số lượng */}
+
           <div className="mb-6 flex items-center gap-4">
             <strong className="text-lg font-medium text-gray-700">
               Số lượng:
@@ -255,8 +339,12 @@ const UserProductPage = () => {
                 onClick={decrement}
                 disabled={count <= 1}
                 className={`px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors
-        ${count <= 1 ? "cursor-not-allowed text-gray-400" : "text-gray-700"}
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                ${
+                  count <= 1
+                    ? "cursor-not-allowed text-gray-400"
+                    : "text-gray-700"
+                }
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 aria-label="Giảm số lượng"
               >
                 <svg
@@ -279,11 +367,10 @@ const UserProductPage = () => {
                 type="number"
                 value={count}
                 min="1"
-                max={product.stock} // Đặt max bằng product.stock
+                max={product.stock}
                 onChange={(e) => {
-                  if (product.stock != 0) {
-                    const value = parseInt(e.target.value) || 1; // Nếu không parse được, mặc định là 1
-                    // Giới hạn giá trị trong khoảng từ 1 đến product.stock
+                  if (product.stock !== 0) {
+                    const value = parseInt(e.target.value) || 1;
                     const newValue = Math.min(
                       Math.max(1, value),
                       product.stock
@@ -292,21 +379,21 @@ const UserProductPage = () => {
                   }
                 }}
                 className="w-16 text-center border-x border-gray-300 font-medium text-gray-700
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-        [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 aria-label="Số lượng sản phẩm"
               />
 
               <button
                 onClick={increment}
-                disabled={count >= product.stock} // Vô hiệu hóa khi count đạt product.stock
+                disabled={count >= product.stock}
                 className={`px-4 py-2 bg-gray-50 hover:bg-gray-100 transition-colors
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-        ${
-          count >= product.stock || product.stock == 0
-            ? "cursor-not-allowed text-gray-400"
-            : "text-gray-700"
-        }`}
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                ${
+                  count >= product.stock || product.stock === 0
+                    ? "cursor-not-allowed text-gray-400"
+                    : "text-gray-700"
+                }`}
                 aria-label="Tăng số lượng"
               >
                 <svg
@@ -326,24 +413,22 @@ const UserProductPage = () => {
               </button>
             </div>
           </div>
-          {/* Nút hành động */}
+
           <div className="flex space-x-4">
-            {/* Nút "Thêm vào giỏ" */}
             <Button
-              className="w-40 h-12 font-semibold rounded-md "
+              className="w-40 h-12 font-semibold rounded-md"
               variant="solid"
               color="danger"
-              onClick={() => console.log("Thêm vào giỏ", product.id)}
+              onClick={() => handleAddToCart(product)}
             >
               THÊM VÀO GIỎ
             </Button>
 
-            {/* Nút "Mua ngay" */}
             <Button
               className="w-40 h-12 font-semibold rounded-md btn-pay"
               variant="solid"
               color="primary"
-              onClick={() => console.log("Mua ngay", product.id)}
+              onClick={handleBuyNow}
             >
               MUA NGAY
               <span>CẢM ƠN QUÝ KHÁCH</span>
@@ -352,7 +437,6 @@ const UserProductPage = () => {
         </Col>
       </Row>
 
-      {/* Tabs: Mô tả, Đánh giá, Chính sách */}
       <Tabs
         className="w-full"
         size="large"
@@ -408,9 +492,7 @@ const UserProductPage = () => {
             ),
             children: (
               <div className="p-6 bg-white rounded-lg shadow-md">
-                <p className="text-gray-700">
-                  Chưa có đánh giá nào cho sản phẩm này.
-                </p>
+                <CommentComponent product={product} />
               </div>
             ),
           },

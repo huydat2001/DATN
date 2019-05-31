@@ -5,6 +5,7 @@ import MenuUserComponent from "../../components/layout/menu.user";
 import HeaderUser from "../../components/layout/header.user";
 import FooterUser from "../../components/layout/footer.user";
 import ScrollToTop from "../../components/until/scrolltotop";
+import ChatWidget from "../../components/chatting/chat.widget";
 
 const UserLayout = () => {
   const location = useLocation();
@@ -64,7 +65,7 @@ const UserLayout = () => {
         )}
         {/* Nội dung chính */}
         <Content
-          className="min-h-screen w-[90vw] xl:w-[70vw] mx-auto"
+          className="min-h-screen w-[95vw] xl:w-[75vw] mx-auto"
           style={{
             padding: "16px 24px",
             background: "#fff",
@@ -74,6 +75,7 @@ const UserLayout = () => {
         >
           <Outlet />
         </Content>
+        <ChatWidget />
         {/* Footer */}
         <Footer className="bg-white text-gray-700 text-center py-4 px-0 border-t border-gray-100 border-solid">
           <FooterUser />

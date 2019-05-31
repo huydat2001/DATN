@@ -30,14 +30,13 @@ const LoginPage = () => {
       }
     }
   }, [user, navigate]);
-  console.log("user effect :>> ", user);
   const onFinish = async (values) => {
     setLoading(true);
     const res = await loginAPI(values);
     if (res && res.data) {
       notification.success({
         message: "Đăng nhập thành công",
-        description: `Chào mừng ${res.data.fullName}`,
+        description: `Chào mừng ${res.data.username} trở lại!`,
       });
       localStorage.setItem("access_token", res.accessToken);
       setUser(res.data);
@@ -132,6 +131,9 @@ const LoginPage = () => {
         </Form>
         <Text style={{ display: "block", textAlign: "center", marginTop: 16 }}>
           Bạn chưa có tài khoản? <a href="/register">Đăng kí ngay</a>
+        </Text>
+        <Text style={{ display: "block", textAlign: "center", marginTop: 16 }}>
+          <a href="/forgot-password">Quên mật khẩu</a>
         </Text>
       </div>
     </div>
