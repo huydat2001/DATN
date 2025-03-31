@@ -1,4 +1,6 @@
-const Category = require("../../models/Category");
+const aqp = require("api-query-params");
+const Category = require("../../models/category");
+
 module.exports = {
   getAllCategories: async (page, limit, queryString) => {
     try {
@@ -11,10 +13,11 @@ module.exports = {
         categories = await Category.find(filter)
           .skip(offset)
           .limit(limit)
+          .populate("parent")
           .exec();
         totalCategories = await Category.countDocuments(filter);
       } else {
-        categories = await Category.find({});
+        categories = await Category.find({}).populate("parent");
       }
       return {
         categories,
@@ -22,34 +25,11 @@ module.exports = {
           current_page: page,
           limit: limit,
           total_pages: limit > 0 ? Math.ceil(totalCategories / limit) : 1,
-          total_categories: totalCategories,
+          total: totalCategories,
         },
       };
     } catch (error) {
       throw new Error("Lỗi truy vấn dữ liệu: " + error.message);
-    }
-  },
-  createCategory: async (newCategory) => {
-    try {
-      const existingCategory = await Category.findOne({
-        name: newCategory.name,
-      });
-
-      // Thu thập tất cả lỗi trùng lặp
-      const errors = [];
-      if (existingCategory) {
-        errors.push("Tên danh mục đã tồn tại");
-      }
-
-      // Nếu có lỗi, throw tất cả lỗi cùng lúc
-      if (errors.length > 0) {
-        throw new Error(errors.join(", "));
-      }
-
-      let category = await Category.create(newCategory);
-      return category;
-    } catch (error) {
-      throw new Error(error.message);
     }
   },
   findByIDCategory: async (id) => {
@@ -58,9 +38,33 @@ module.exports = {
       return category;
     } catch (error) {
       console.log("error :>> ", error);
+      return error;
     }
   },
-  updateCategory: async (id, updatedCategory) => {
+  createCategory: async (newCategory) => {
+    try {
+      const existingCategory = await Category.findOneWithDeleted({
+        name: newCategory.name,
+      });
+
+      if (existingCategory) {
+        if (existingCategory.deleted) {
+          // Xóa cứng danh mục cũ nếu đã bị xóa mềm
+          await Category.deleteOne({ _id: existingCategory._id });
+        } else {
+          // Chỉ báo lỗi nếu danh mục tồn tại và không bị xóa mềm
+          throw new Error("Tên danh mục đã tồn tại");
+        }
+      }
+
+      const category = await Category.create(newCategory);
+      return category;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  },
+
+  updateCategory: async (updatedCategory) => {
     try {
       const existingCategory = await Category.findOne({
         name: updatedCategory.name,
@@ -68,7 +72,10 @@ module.exports = {
 
       // Thu thập tất cả lỗi trùng lặp
       const errors = [];
-      if (existingCategory) {
+      if (
+        existingCategory &&
+        existingCategory._id.toString() !== updatedCategory.id
+      ) {
         errors.push("Tên danh mục đã tồn tại");
       }
 
@@ -76,10 +83,18 @@ module.exports = {
       if (errors.length > 0) {
         throw new Error(errors.join(", "));
       }
+      const updateData = {
+        name: updatedCategory.name,
+        description: updatedCategory.description,
+        parent:
+          updatedCategory.parent !== undefined ? updatedCategory.parent : null,
+        status: updatedCategory.status,
+      };
 
-      let category = await Category.findByIdAndUpdate(id, updatedCategory, {
-        new: true,
-      });
+      let category = await Category.updateOne(
+        { _id: updatedCategory.id },
+        updateData
+      );
       return category;
     } catch (error) {
       throw new Error(error.message);
@@ -87,7 +102,10 @@ module.exports = {
   },
   deleteCategory: async (id) => {
     try {
-      let category = await Category.findByIdAndDelete(id);
+      let category = await Category.deleteById({ _id: id });
+      if (!category || category.deletedCount === 0) {
+        throw new Error("Danh mục không tồn tại hoặc đã bị xóa trước đó");
+      }
       return category;
     } catch (error) {
       throw new Error(error.message);

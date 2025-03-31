@@ -53,7 +53,7 @@ module.exports = {
           success: false,
           error: {
             code: 400,
-            messages: errorMessages, // Trả về mảng
+            message: errorMessages, // Trả về mảng
           },
         });
       }
@@ -68,13 +68,15 @@ module.exports = {
   },
   putUpdateCategoryAPI: async (req, res) => {
     try {
-      const { id } = req.params;
-      const { name, description } = req.body;
+      const { id, name, description, parent, status } = req.body;
       const updatedCategory = {
+        id,
         name,
         description,
+        parent,
+        status,
       };
-      const category = await updateCategory(id, updatedCategory);
+      const category = await updateCategory(updatedCategory);
       return res.status(200).json({
         data: {
           statusCode: true,
@@ -95,6 +97,7 @@ module.exports = {
     try {
       const { id } = req.params;
       const category = await deleteCategory(id);
+
       return res.status(200).json({
         data: {
           statusCode: true,

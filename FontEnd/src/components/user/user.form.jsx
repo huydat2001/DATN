@@ -14,6 +14,7 @@ import {
   getWardAPI,
 } from "../../services/address/api.address";
 import { createUserAPI } from "../../services/api.service.user";
+import { PlusOutlined } from "@ant-design/icons";
 
 const UserFormComponent = (props) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -87,9 +88,6 @@ const UserFormComponent = (props) => {
     }));
   };
 
-  const onFinishFailed = (errorInfo) => {
-    console.log("Failed:", errorInfo);
-  };
   const resetAndCloseModal = () => {
     userForm.resetFields();
     setIsModalOpen(false);
@@ -99,7 +97,7 @@ const UserFormComponent = (props) => {
       ...values,
       address: residenceLabels,
     };
-
+    console.log("values :>> ", values);
     const res = await createUserAPI(values);
     if (res.data) {
       notification.success({
@@ -110,7 +108,7 @@ const UserFormComponent = (props) => {
       await fetchUser();
       resetAndCloseModal();
     } else {
-      const errorMessages = res.error.messages;
+      const errorMessages = res.error.message;
       notification.error({
         message: "Lỗi tạo người dùng",
         description: Array.isArray(errorMessages) ? (
@@ -134,6 +132,7 @@ const UserFormComponent = (props) => {
           setIsModalOpen(true);
         }}
         className="mb-4"
+        icon={<PlusOutlined />}
       >
         Tạo người dùng
       </Button>
@@ -143,9 +142,7 @@ const UserFormComponent = (props) => {
         onOk={() => {
           userForm.submit();
         }}
-        onCancel={() => {
-          setIsModalOpen(false);
-        }}
+        onCancel={resetAndCloseModal}
         maskClosable={false}
       >
         <Form
@@ -155,9 +152,9 @@ const UserFormComponent = (props) => {
           wrapperCol={{ span: 20 }}
           style={{ maxWidth: 700 }}
           onFinish={handleSubmitBtn}
-          onFinishFailed={onFinishFailed}
         >
           <Form.Item
+            hasFeedback
             label="Username"
             name="username"
             rules={[
@@ -175,6 +172,7 @@ const UserFormComponent = (props) => {
             <Input />
           </Form.Item>
           <Form.Item
+            hasFeedback
             label="Email"
             name="email"
             rules={[
@@ -189,6 +187,7 @@ const UserFormComponent = (props) => {
           </Form.Item>
 
           <Form.Item
+            hasFeedback
             label="Mật khẩu"
             name="password"
             rules={[
@@ -230,6 +229,7 @@ const UserFormComponent = (props) => {
           </Form.Item>
 
           <Form.Item
+            hasFeedback
             label="Số điện thoại"
             name="phone"
             rules={[
@@ -269,14 +269,22 @@ const UserFormComponent = (props) => {
           </Form.Item>
 
           <Form.Item
+            hasFeedback
             label="Quyền"
             name="role"
+            initialValue="customer"
             rules={[{ required: true, message: "Quyền không được để trống" }]}
           >
             <Select allowClear>
               <Option value="admin">Admin</Option>
               <Option value="customer">Customer</Option>
               <Option value="staff">Staff</Option>
+            </Select>
+          </Form.Item>
+          <Form.Item label="Trạng thái" name="status" initialValue="active">
+            <Select allowClear>
+              <Option value="active">Hoạt động</Option>
+              <Option value="banned">Ngưng hoạt động</Option>
             </Select>
           </Form.Item>
         </Form>
