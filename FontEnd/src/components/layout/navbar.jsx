@@ -9,8 +9,10 @@ import {
 import { BsFillMenuAppFill } from "react-icons/bs";
 import { IoAnalytics } from "react-icons/io5";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaUser } from "react-icons/fa";
-import { BiSolidCategory } from "react-icons/bi";
+import { FaProductHunt, FaUser } from "react-icons/fa";
+import { BiSolidCategory, BiSolidDiscount } from "react-icons/bi";
+import { CiDiscount1 } from "react-icons/ci";
+import { TbBrandBebo } from "react-icons/tb";
 const Navbar = (props) => {
   const [current, setCurrent] = useState("");
   const [openKeys, setOpenKeys] = useState([]);
@@ -19,19 +21,45 @@ const Navbar = (props) => {
   const { collapsed, setCollapsed } = props;
   useEffect(() => {
     if (location && location.pathname) {
-      const allRoutes = ["users", "apps", "categorys", "analytics"];
-      const currentRoute = allRoutes.find(
-        (item) => `/${item}` === location.pathname
-      );
+      const allRoutes = [
+        "users",
+        "apps",
+        "categorys",
+        "analytics",
+        "discounts",
+        "brands",
+        "products",
+      ];
+
+      // Trích xuất phần cuối của pathname (sau "/admin/")
+      const pathSegments = location.pathname.split("/").filter(Boolean); // Tách thành mảng và bỏ phần tử rỗng
+      const lastSegment = pathSegments[pathSegments.length - 1]; // Lấy phần cuối (users, apps, v.v.)
+
+      // Kiểm tra xem lastSegment có nằm trong allRoutes không
+      const currentRoute = allRoutes.find((item) => item === lastSegment);
+
       if (currentRoute) {
         setCurrent(currentRoute);
         if (currentRoute === "users") {
+          setOpenKeys(["management"]);
+        }
+        if (currentRoute === "categorys") {
+          setOpenKeys(["management"]);
+        }
+        if (currentRoute === "discounts") {
+          setOpenKeys(["management"]);
+        }
+        if (currentRoute === "brands") {
+          setOpenKeys(["management"]);
+        }
+        if (currentRoute === "products") {
           setOpenKeys(["management"]);
         }
         if (currentRoute === "apps") {
           setOpenKeys(["overview"]);
         }
       } else {
+        // Nếu không khớp với route nào (ví dụ: /admin hoặc /admin/), mặc định là analytics
         setCurrent("analytics");
         setOpenKeys(["overview"]);
       }
@@ -49,12 +77,12 @@ const Navbar = (props) => {
       key: "overview",
       children: [
         {
-          label: <Link to="/">Analytics</Link>,
+          label: <Link to="/admin">Analytics</Link>,
           key: "analytics",
           icon: <IoAnalytics />,
         },
         {
-          label: <Link to="/apps">App</Link>,
+          label: <Link to="/admin/apps">App</Link>,
           key: "apps",
           icon: <BsFillMenuAppFill />,
         },
@@ -66,14 +94,29 @@ const Navbar = (props) => {
       key: "management",
       children: [
         {
-          label: <Link to="/users">User</Link>,
+          label: <Link to="/admin/users">Người dùng</Link>,
           key: "users",
           icon: <FaUser />,
         },
         {
-          label: <Link to="/categorys">Category</Link>,
+          label: <Link to="/admin/categorys">Danh mục</Link>,
           key: "categorys",
           icon: <BiSolidCategory />,
+        },
+        {
+          label: <Link to="/admin/discounts">Phiếu giảm giá</Link>,
+          key: "discounts",
+          icon: <BiSolidDiscount />,
+        },
+        {
+          label: <Link to="/admin/brands">Nhãn hàng</Link>,
+          key: "brands",
+          icon: <TbBrandBebo />,
+        },
+        {
+          label: <Link to="/admin/products">Sản phẩm</Link>,
+          key: "products",
+          icon: <FaProductHunt />,
         },
       ],
     },
@@ -81,13 +124,15 @@ const Navbar = (props) => {
 
   return (
     <>
+      {/* <div className="h-20">hello</div> */}
+
       <div>
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={[current]}
-          // openKeys={openKeys}
-          // onOpenChange={onOpenChange}
+          openKeys={openKeys}
+          onOpenChange={onOpenChange}
           // inlineCollapsed={collapsed}
           items={items}
           className="min-h-screen text-sm md:text-base"

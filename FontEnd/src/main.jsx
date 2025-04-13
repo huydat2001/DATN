@@ -11,15 +11,21 @@ import UserPage from "./pages/admin/user.jsx";
 import LoginPage from "./pages/login.jsx";
 import PrivateRoute from "./pages/private.route.jsx";
 import CategoryPage from "./pages/admin/category.jsx";
+import DiscountPage from "./pages/admin/discount.jsx";
+import BrandPage from "./pages/admin/brand.jsx";
+import ProductPage from "./pages/admin/product.jsx";
+import UserLayout from "./pages/user/UserLayout.jsx";
+import UserProductPage from "./pages/user/user.product.jsx";
+import HomePage from "./pages/user/homepage.user.jsx";
+import ScrollToTop from "./components/until/scrolltotop.jsx";
+import { CartProvider } from "./contexts/cart.context.jsx";
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/admin",
     element: (
       // <PrivateRoute>
       <App />
     ),
-    // </PrivateRoute>
-
     errorElement: <ErrorPage />,
     children: [
       {
@@ -31,7 +37,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/apps",
+        path: "apps",
         element: (
           <PrivateRoute>
             <AppPage />
@@ -39,7 +45,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/users",
+        path: "users",
         element: (
           <PrivateRoute>
             <UserPage />
@@ -47,13 +53,47 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/categorys",
+        path: "categorys",
         element: (
           <PrivateRoute>
             <CategoryPage />
           </PrivateRoute>
         ),
       },
+      {
+        path: "discounts",
+        element: (
+          <PrivateRoute>
+            <DiscountPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "brands",
+        element: (
+          <PrivateRoute>
+            <BrandPage />
+          </PrivateRoute>
+        ),
+      },
+      {
+        path: "products",
+        element: (
+          <PrivateRoute>
+            <ProductPage />
+          </PrivateRoute>
+        ),
+      },
+    ],
+  },
+  {
+    path: "/",
+    element: <UserLayout />,
+    errorElement: <ErrorPage />,
+
+    children: [
+      { index: true, element: <HomePage /> },
+      { path: "product/:name", element: <UserProductPage /> },
     ],
   },
   {
@@ -63,6 +103,8 @@ const router = createBrowserRouter([
 ]);
 ReactDOM.createRoot(document.getElementById("root")).render(
   <AuthWrapper>
-    <RouterProvider router={router} />
+    <CartProvider>
+      <RouterProvider router={router} />
+    </CartProvider>
   </AuthWrapper>
 );

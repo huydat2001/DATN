@@ -8,13 +8,8 @@ import {
 
 const CategoryUpdateFormComponent = (props) => {
   const [optionCategory, setOptionCategory] = useState([]);
-  const {
-    isModalUpdateOpen,
-    setIsModalUpdateOpen,
-    dataDetail,
-    setDataDetail,
-    fetchCategory,
-  } = props;
+  const { isModalUpdateOpen, setIsModalUpdateOpen, dataDetail, fetchCategory } =
+    props;
   useEffect(() => {
     onFill();
     getCategory();
@@ -53,7 +48,7 @@ const CategoryUpdateFormComponent = (props) => {
     const res = await updateCategoryAPI(values);
     if (res.data) {
       notification.success({
-        message: "Cập nhật danh mục",
+        message: "Cập nhật thành công",
         description: "Cập nhật danh mục thành công",
       });
       setIsModalUpdateOpen(false);
@@ -87,7 +82,7 @@ const CategoryUpdateFormComponent = (props) => {
       >
         <Form
           form={categoryForm}
-          name="userForm"
+          name="categoryForm"
           labelCol={{ span: 5 }}
           wrapperCol={{ span: 20 }}
           style={{ maxWidth: 700 }}

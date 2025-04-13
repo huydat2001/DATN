@@ -29,8 +29,55 @@ const {
   validateCreateCategory,
   validateUpdateCategory,
 } = require("../middleware/schemas/category.validate");
+const {
+  getAllDiscountAPI,
+  postCreateDiscountAPI,
+  putUpdateDiscountAPI,
+  deleteDiscountAPI,
+} = require("../controllers/admin/discount.controller");
+const {
+  validateCreateDiscount,
+  validateUpdateDiscount,
+} = require("../middleware/schemas/discount.validate");
+const {
+  getAllBrandAPI,
+  postCreateBrandAPI,
+  putUpdateBrandAPI,
+  deleteBrandAPI,
+} = require("../controllers/admin/brand.controller");
+const {
+  validateCreateBrand,
+  validateUpdateBrand,
+} = require("../middleware/schemas/brand.validate");
+const {
+  postUploadSingleFileAPI,
+  postUploadMultipleFilesAPI,
+} = require("../controllers/upload.controller");
+const {
+  validateCreateProduct,
+  validateUpdateProduct,
+} = require("../middleware/schemas/product.validate");
+const {
+  getAllProductAPI,
+  postCreateProductAPI,
+  putUpdateProductAPI,
+  deleteProductAPI,
+  getProductByQuyeryAPI,
+} = require("../controllers/admin/product.controller");
+const {
+  uploadSingle,
+  uploadMultiple,
+} = require("../middleware/upload.middleware");
+const {
+  getCartAPI,
+  addToCartAPI,
+  updateCartAPI,
+  removeFromCartAPI,
+} = require("../controllers/user/cart.controller");
 const routerAPI = express.Router();
 
+routerAPI.post("/upload", uploadSingle, postUploadSingleFileAPI);
+routerAPI.post("/uploadmultiple", uploadMultiple, postUploadMultipleFilesAPI);
 //api login
 routerAPI.post("/auth/login", login);
 routerAPI.post("/auth/refresh-token", refreshToken);
@@ -64,7 +111,7 @@ routerAPI.delete(
   deleteUserAPI
 );
 
-//api product
+//api category
 
 routerAPI.get(
   "/category",
@@ -91,5 +138,108 @@ routerAPI.delete(
   authenticateToken,
   checkRole(["admin", "staff"]),
   deleteCategoryAPI
+);
+
+//api discount
+
+routerAPI.get(
+  "/discount",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  getAllDiscountAPI
+);
+routerAPI.post(
+  "/discount",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  validateCreateDiscount,
+  postCreateDiscountAPI
+);
+routerAPI.put(
+  "/discount",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  validateUpdateDiscount,
+  putUpdateDiscountAPI
+);
+routerAPI.delete(
+  "/discount/:id",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  deleteDiscountAPI
+);
+
+//api brand
+
+routerAPI.get(
+  "/brand",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  getAllBrandAPI
+);
+routerAPI.post(
+  "/brand",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  validateCreateBrand,
+  postCreateBrandAPI
+);
+routerAPI.put(
+  "/brand",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  validateUpdateBrand,
+  putUpdateBrandAPI
+);
+routerAPI.delete(
+  "/brand/:id",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  deleteBrandAPI
+);
+
+//api product
+
+routerAPI.get(
+  "/product",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  getAllProductAPI
+);
+routerAPI.post(
+  "/product",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  validateCreateProduct,
+  postCreateProductAPI
+);
+routerAPI.put(
+  "/product",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  validateUpdateProduct,
+  putUpdateProductAPI
+);
+routerAPI.delete(
+  "/product/:id",
+  authenticateToken,
+  checkRole(["admin", "staff"]),
+  deleteProductAPI
+);
+
+routerAPI.get(
+  "/user/product",
+  authenticateToken,
+  checkRole(["admin", "staff", "customer"]),
+  getProductByQuyeryAPI
+);
+
+routerAPI.get("/cart", authenticateToken, getCartAPI);
+routerAPI.post("/cart/add", authenticateToken, addToCartAPI);
+routerAPI.put("/cart/update", authenticateToken, updateCartAPI);
+routerAPI.delete(
+  "/cart/remove/:productId",
+  authenticateToken,
+  removeFromCartAPI
 );
 module.exports = routerAPI; //export default

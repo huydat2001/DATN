@@ -9,6 +9,7 @@ import { useContext, useEffect, useState } from "react";
 import { useRef } from "react";
 import { AuthContext } from "./contexts/auth.context";
 import { getAccountAPI } from "./services/login";
+import ScrollToTop from "./components/until/scrolltotop";
 
 function App() {
   const [collapsed, setCollapsed] = useState(false);
@@ -21,6 +22,24 @@ function App() {
   useEffect(() => {
     fetchUserInfo();
   }, []);
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        isMobile &&
+        isSiderVisible &&
+        siderRef.current &&
+        !siderRef.current.contains(event.target)
+      ) {
+        setIsSiderVisible(false); // Đóng Sider nếu click bên ngoài
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMobile, isSiderVisible]);
   useEffect(() => {
     // Media query cho md (≥768px)
     const mobileQuery = window.matchMedia("(min-width: 768px)");
@@ -57,24 +76,7 @@ function App() {
       lgQuery.removeEventListener("change", handleLgQueryChange);
     };
   }, [userToggled]);
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        isMobile &&
-        isSiderVisible &&
-        siderRef.current &&
-        !siderRef.current.contains(event.target)
-      ) {
-        setIsSiderVisible(false); // Đóng Sider nếu click bên ngoài
-      }
-    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isMobile, isSiderVisible]);
   const delay = (milSeconds) => {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -90,6 +92,7 @@ function App() {
     }
     setIsAppLoading(false);
   };
+
   return (
     <>
       {isAppLoading === true ? (
@@ -98,6 +101,8 @@ function App() {
         </Row>
       ) : (
         <>
+          <ScrollToTop />
+
           <Layout className="min-h-screen">
             {/* {user && user._id && ( */}
             <Sider
